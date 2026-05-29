@@ -1,0 +1,33 @@
+name: Build Tweak
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Theos
+        run: |
+          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos )"
+          echo "THEOS=~/theos" >> $GITHUB_ENV
+          echo "~/theos/bin" >> $GITHUB_PATH
+
+      - name: Setup SDK
+        run: |
+          curl -L https://github.com/theos/sdks/archive/master.zip -o sdks.zip
+          unzip -q sdks.zip
+          mkdir -p ~/theos/sdks
+          mv sdks-master/*.sdk ~/theos/sdks/
+
+      - name: Build Package
+        run: |
+          make package FINALPACKAGE=1
+        
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: MapleStoryM_Deb
+          path: packages/*.deb
