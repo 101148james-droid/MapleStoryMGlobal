@@ -1,0 +1,9 @@
+{
+  Filter = {
+    Bundles = (
+      "com.nexon.maplem.global",
+      "com.nexon.maplestorym.global",
+      "com.nexon.maplem"
+    );
+  };
+}

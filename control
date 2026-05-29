@@ -1,0 +1,12 @@
+Package: com.yourcompany.maplemmenu
+Name: MapleStoryMGlobal
+Depends: mobilesubstrate
+Version: 1.0.0
+Architecture: iphoneos-arm64e
+Description: A tweak for MapleStory M
+Maintainer: Your Name
+Author: Your Name
+Homepage: https://yourcompany.com
+Filter:
+  Bundles:
+    - com.nexon.maplem.global
