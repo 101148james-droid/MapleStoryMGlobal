@@ -438,16 +438,21 @@ BOOL SendNetworkAuth(NSString *ip, int port, NSString *payload, NSString **respo
 %end
 
 // ==========================================
-// 5. 越獄檢測繞過 Hook (my_availability_version_check)
+// 5. 越獄檢測繞過 (my_availability_version_check)
 // ==========================================
-// 決勝時刻插件中 Hook 了 dyld_availability_version_check 來繞過某些檢測，我們在這裡也實現類似的防護
+// 決勝時刻插件中 Hook 了 availability_version_check 來繞過某些檢測
+// 我們使用 MSHookFunction + dlsym 方式來 Hook
+#include <dlfcn.h>
+
 typedef struct {
     uint32_t platform;
     uint32_t version;
 } dyld_build_version_t;
 
-%hookf(uint32_t, dyld_get_active_platform) {
-    return 1; // 模擬標準 iOS 平台
+static bool (*orig_availability_version_check)(uint32_t count, const dyld_build_version_t *versions) = NULL;
+static bool my_availability_version_check(uint32_t count, const dyld_build_version_t *versions) {
+    // 永遠返回 true，繞過版本檢測
+    return true;
 }
 
 // ==========================================
@@ -469,3 +474,18 @@ typedef struct {
 }
 
 %end
+
+// ==========================================
+// 7. 構造函數 - 初始化所有 Hook
+// ==========================================
+%ctor {
+    // Hook availability_version_check (越獄檢測繞過)
+    void *handle = dlopen("/usr/lib/system/libdyld.dylib", RTLD_LAZY);
+    if (handle) {
+        void *sym = dlsym(handle, "_availability_version_check");
+        if (sym) {
+            MSHookFunction(sym, (void *)&my_availability_version_check, (void **)&orig_availability_version_check);
+        }
+        dlclose(handle);
+    }
+}
