@@ -7,6 +7,3 @@ Description: A functional menu tweak for MapleStory M Global
 Maintainer: Manus AI
 Author: Manus AI
 Section: Tweaks
-Filter:
-  Bundles:
-    - com.nexon.maplem.global
