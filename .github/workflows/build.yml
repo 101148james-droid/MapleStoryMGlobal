@@ -11,19 +11,25 @@ jobs:
 
       - name: Setup Theos
         run: |
-          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos )"
+          # 手動克隆 Theos，不使用自動安裝腳本
+          git clone --recursive https://github.com/theos/theos.git ~/theos
           echo "THEOS=~/theos" >> $GITHUB_ENV
           echo "~/theos/bin" >> $GITHUB_PATH
 
       - name: Setup SDK
         run: |
+          # 直接從指定連結下載 SDK
+          mkdir -p ~/theos/sdks
           curl -L https://github.com/theos/sdks/archive/master.zip -o sdks.zip
           unzip -q sdks.zip
-          mkdir -p ~/theos/sdks
           mv sdks-master/*.sdk ~/theos/sdks/
+          # 確保有 iPhoneOS16.5.sdk 作為預設
+          ls -l ~/theos/sdks/
 
       - name: Build Package
         run: |
+          # 執行編譯
+          export THEOS=~/theos
           make package FINALPACKAGE=1
         
       - name: Upload Artifact
