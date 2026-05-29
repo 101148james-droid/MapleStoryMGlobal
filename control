@@ -1,12 +1,12 @@
-Package: com.yourcompany.maplemmenu
+Package: com.manus.maplestorym
 Name: MapleStoryMGlobal
 Depends: mobilesubstrate
 Version: 1.0.0
-Architecture: iphoneos-arm64e
-Description: A tweak for MapleStory M
-Maintainer: Your Name
-Author: Your Name
-Homepage: https://yourcompany.com
+Architecture: iphoneos-arm
+Description: A functional menu tweak for MapleStory M Global
+Maintainer: Manus AI
+Author: Manus AI
+Section: Tweaks
 Filter:
   Bundles:
     - com.nexon.maplem.global

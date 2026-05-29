@@ -3,6 +3,7 @@ TARGET = iphone:latest:14.0
 
 include $(THEOS)/makefiles/common.mk
 _THEOS_PACKAGE_FORMAT_COMPRESSION = gzip
+THEOS_PACKAGE_SCHEME = rootless
 
 TWEAK_NAME = MapleStoryMGlobal
 MapleStoryMGlobal_FILES = Tweak.x
