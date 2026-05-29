@@ -6,9 +6,7 @@
 	<dict>
 		<key>Bundles</key>
 		<array>
-			<string>com.nexon.maplem.global</string>
-			<string>com.nexon.maplestorym.global</string>
-			<string>com.nexon.maplem</string>
+			<string>com.nexon.mod</string>
 		</array>
 	</dict>
 </dict>

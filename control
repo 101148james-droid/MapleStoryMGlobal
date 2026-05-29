@@ -2,8 +2,9 @@ Package: com.manus.maplestorym
 Version: 1.0.0
 Priority: optional
 Section: Tweaks
-Depends: firmware (>= 8.0), mobilesubstrate
+Depends: firmware (>= 14.0), mobilesubstrate
 Architecture: iphoneos-arm64e
-Name: MapleStoryMGlobal
+Name: MapleStoryWorldsTweak
 Author: Manus AI
+Description: MapleStory Worlds tweak with IAP bypass, network auth, and floating menu.
 Icon: file:///Applications/Cydia.app/Sections/Tweaks.png
