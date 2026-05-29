@@ -10,5 +10,3 @@ MapleStoryMGlobal_FRAMEWORKS = UIKit
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 
-AFTER_INSTALL::
-	install.exec "killall -9 MapleStoryM"

@@ -26,6 +26,9 @@ jobs:
           # 確保有 iPhoneOS16.5.sdk 作為預設
           ls -l ~/theos/sdks/
 
+      - name: Install ldid
+        run: brew install ldid
+
       - name: Build Package
         run: |
           # 執行編譯
