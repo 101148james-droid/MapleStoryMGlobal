@@ -6,7 +6,6 @@
 	<dict>
 		<key>Bundles</key>
 		<array>
-			<string>com.apple.UIKit111</string>
 			<string>com.nexon.mod</string>
 		</array>
 	</dict>
