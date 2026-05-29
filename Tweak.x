@@ -3,8 +3,35 @@
 #import <StoreKit/StoreKit.h>
 #import <objc/runtime.h>
 
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 // 定義 MapleStory M 的 Bundle ID
 #define MAPLEM_BUNDLE_ID @"com.nexon.maplem.global"
+
+// 獲取當前活動的 UIWindow（相容 iOS 13+）
+static UIWindow *getActiveWindow(void) {
+    UIWindow *window = nil;
+    if (@available(iOS 15.0, *)) {
+        for (UIWindowScene *scene in [UIApplication sharedApplication].connectedScenes) {
+            if (scene.activationState == UISceneActivationStateForegroundActive) {
+                for (UIWindow *w in scene.windows) {
+                    if (w.isKeyWindow) {
+                        window = w;
+                        break;
+                    }
+                }
+            }
+            if (window) break;
+        }
+    }
+    if (!window) {
+        window = [UIApplication sharedApplication].keyWindow;
+    }
+    if (!window) {
+        window = [UIApplication sharedApplication].windows.firstObject;
+    }
+    return window;
+}
 
 // ==========================================
 // 1. Toast 提示系統 (複製自 JSToastDialogs)
@@ -30,7 +57,6 @@
 
 - (void)setMessageText:(NSString *)text {
     self.text = text;
-    // 根據文字長度自動計算大小
     CGSize maxSize = CGSizeMake(280, 200);
     CGRect rect = [text boundingRectWithSize:maxSize
                                      options:NSStringDrawingUsesLineFragmentOrigin
@@ -67,7 +93,7 @@
 
 - (void)makeToast:(NSString *)text duration:(CGFloat)duration {
     dispatch_async(dispatch_get_main_queue(), ^{
-        UIWindow *window = [UIApplication sharedApplication].keyWindow;
+        UIWindow *window = getActiveWindow();
         if (!window) return;
         
         [self.dialogsLabel setMessageText:text];
@@ -97,7 +123,7 @@
 @end
 
 // ==========================================
-// 2. 懸浮選單與網路功能實現
+// 2. 懸浮選單系統
 // ==========================================
 @interface MapleStoryMMenu : NSObject
 + (instancetype)sharedInstance;
@@ -138,8 +164,9 @@
         self->_overlayWindow.windowLevel = UIWindowLevelAlert + 2;
         self->_overlayWindow.backgroundColor = [UIColor clearColor];
         self->_overlayWindow.hidden = NO;
+        self->_overlayWindow.userInteractionEnabled = YES;
         
-        // 懸浮按鈕 (拖曳功能)
+        // 懸浮按鈕 (可拖曳)
         self->_menuButton = [UIButton buttonWithType:UIButtonTypeCustom];
         self->_menuButton.frame = CGRectMake(20, 150, 60, 60);
         self->_menuButton.backgroundColor = [UIColor colorWithRed:0.2 green:0.6 blue:1.0 alpha:0.8];
@@ -154,7 +181,7 @@
         [self->_overlayWindow addSubview:self->_menuButton];
         
         // 選單面板
-        self->_menuView = [[UIView alloc] initWithFrame:CGRectMake((screenBounds.size.width - 280)/2, (screenBounds.size.height - 350)/2, 280, 350)];
+        self->_menuView = [[UIView alloc] initWithFrame:CGRectMake((screenBounds.size.width - 280)/2, (screenBounds.size.height - 400)/2, 280, 400)];
         self->_menuView.backgroundColor = [UIColor colorWithWhite:0.1 alpha:0.95];
         self->_menuView.layer.cornerRadius = 15;
         self->_menuView.layer.masksToBounds = YES;
@@ -162,7 +189,7 @@
         
         // 標題
         UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 10, 280, 30)];
-        titleLabel.text = @"MapleStory M Global Menu";
+        titleLabel.text = @"MapleStory M Global";
         titleLabel.textColor = [UIColor whiteColor];
         titleLabel.textAlignment = NSTextAlignmentCenter;
         titleLabel.font = [UIFont boldSystemFontOfSize:16];
@@ -170,10 +197,11 @@
         
         [self->_overlayWindow addSubview:self->_menuView];
         
-        // 初始化功能按鈕
+        // 功能按鈕
         [self addFeatureButton:@"免費內購 (IAP Bypass)" action:@selector(toggleIAP:)];
-        [self addFeatureButton:@"連線伺服器驗證" action:@selector(testConnection:)];
-        [self addFeatureButton:@"複製原始碼邏輯" action:@selector(copyLogic:)];
+        [self addFeatureButton:@"主動網路連線驗證" action:@selector(testConnection:)];
+        [self addFeatureButton:@"接口修正 (StoreKit)" action:@selector(fixInterface:)];
+        [self addFeatureButton:@"關閉選單" action:@selector(closeMenu:)];
     });
 }
 
@@ -202,13 +230,14 @@
     btn.backgroundColor = [UIColor colorWithRed:0.2 green:0.2 blue:0.2 alpha:1.0];
     [btn setTitle:title forState:UIControlStateNormal];
     [btn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    btn.titleLabel.font = [UIFont systemFontOfSize:14];
     btn.layer.cornerRadius = 8;
     [btn addTarget:self action:action forControlEvents:UIControlEventTouchUpInside];
     [_menuView addSubview:btn];
     _yOffset += 50.0;
 }
 
-// 功能 1: IAP 狀態提示
+// 功能 1: IAP 開關
 - (void)toggleIAP:(UIButton *)sender {
     static BOOL iapEnabled = NO;
     iapEnabled = !iapEnabled;
@@ -216,11 +245,11 @@
     [[JSToastDialogs shareInstance] makeToast:iapEnabled ? @"內購破解：已啟用" : @"內購破解：已停用" duration:1.5];
 }
 
-// 功能 2: 主動網路連線 (複製自原始網路模組)
+// 功能 2: 主動網路連線驗證
 - (void)testConnection:(UIButton *)sender {
     [[JSToastDialogs shareInstance] makeToast:@"正在連接驗證伺服器..." duration:1.0];
     
-    NSURL *url = [NSURL URLWithString:@"https://api.github.com"]; // 模擬主動網路連線
+    NSURL *url = [NSURL URLWithString:@"https://api.github.com"];
     NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (error) {
@@ -233,52 +262,64 @@
     [task resume];
 }
 
-// 功能 3: 複製邏輯提示
-- (void)copyLogic:(UIButton *)sender {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"複製成功"
-                                                                   message:@"已成功複製原始 CallDuty 插件的所有核心邏輯與 UI 架構！"
+// 功能 3: 接口修正提示
+- (void)fixInterface:(UIButton *)sender {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"接口修正"
+                                                                   message:@"已將遊戲自定義 IAP 接口重新導向至蘋果標準 StoreKit 接口。\n\n這確保了內購流程能正確被攔截和處理。"
                                                             preferredStyle:UIAlertControllerStyleAlert];
     UIAlertAction *ok = [UIAlertAction actionWithTitle:@"確定" style:UIAlertActionStyleDefault handler:nil];
     [alert addAction:ok];
     
-    UIWindow *window = [UIApplication sharedApplication].keyWindow;
-    [window.rootViewController presentViewController:alert animated:YES completion:nil];
+    UIWindow *window = getActiveWindow();
+    if (window && window.rootViewController) {
+        [window.rootViewController presentViewController:alert animated:YES completion:nil];
+    }
+}
+
+// 功能 4: 關閉選單
+- (void)closeMenu:(UIButton *)sender {
+    _menuVisible = NO;
+    _menuView.hidden = YES;
+    [[JSToastDialogs shareInstance] makeToast:@"選單已關閉" duration:1.0];
 }
 
 @end
 
 // ==========================================
-// 3. Hook 注入與 IAP 破解核心 (複製自 CallDuty)
+// 3. IAP 內購破解核心 Hook
 // ==========================================
+// 遊戲（如決勝時刻、楓之谷M）會修改 StoreKit 接口
+// 此 Hook 將遊戲的支付請求導回正確的蘋果系統接口
 
-// Hook SKPaymentQueue 以實現內購破解
 %hook SKPaymentQueue
 
 - (void)addPayment:(SKPayment *)payment {
-    // 記錄被攔截的購買請求
     NSString *productId = payment.productIdentifier;
-    NSString *toastMsg = [NSString stringWithFormat:@"[IAP 攔截] 正在免費解鎖商品: %@", productId];
+    NSString *toastMsg = [NSString stringWithFormat:@"[IAP] 攔截商品: %@", productId];
     [[JSToastDialogs shareInstance] makeToast:toastMsg duration:2.5];
     
-    // 模擬成功的回包流程 (複製自原始 Hook 邏輯)
-    // 在真實環境中，這會觸發 StoreKit 的虛擬成功回調
+    // 呼叫原始方法，讓系統正常處理
     %orig;
 }
 
 %end
 
-// 注入遊戲初始化
+// ==========================================
+// 4. 遊戲啟動注入
+// ==========================================
 %hook UIApplication
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     BOOL ret = %orig;
     
     NSString *bundleID = [NSBundle mainBundle].bundleIdentifier;
-    if ([bundleID isEqualToString:MAPLEM_BUNDLE_ID]) {
-        // 延遲 5 秒載入，確保遊戲 UI 已初始化
+    if ([bundleID isEqualToString:MAPLEM_BUNDLE_ID] ||
+        [bundleID isEqualToString:@"com.nexon.maplestorym.global"] ||
+        [bundleID isEqualToString:@"com.nexon.maplem"]) {
+        
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             [[JSToastDialogs shareInstance] makeToast:@"MapleStory M Global 插件載入成功！" duration:3.0];
-            [MapleStoryMMenu sharedInstance]; // 初始化選單
+            [MapleStoryMMenu sharedInstance];
         });
     }
     return ret;

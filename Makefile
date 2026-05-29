@@ -6,6 +6,6 @@ include $(THEOS)/makefiles/common.mk
 TWEAK_NAME = MapleStoryMGlobal
 MapleStoryMGlobal_FILES = Tweak.x
 MapleStoryMGlobal_FRAMEWORKS = UIKit Foundation StoreKit
-MapleStoryMGlobal_CFLAGS = -fobjc-arc
+MapleStoryMGlobal_CFLAGS = -fobjc-arc -Wno-deprecated-declarations
 
 include $(THEOS_MAKE_PATH)/tweak.mk
