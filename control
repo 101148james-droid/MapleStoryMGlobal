@@ -2,7 +2,7 @@ Package: com.manus.maplestorym
 Name: MapleStoryMGlobal
 Depends: mobilesubstrate
 Version: 1.0.0
-Architecture: iphoneos-arm
+Architecture: iphoneos-arm64
 Description: A functional menu tweak for MapleStory M Global
 Maintainer: Manus AI
 Author: Manus AI
