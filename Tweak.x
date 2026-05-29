@@ -222,7 +222,7 @@ void SendNetworkAuth(NSString *token) {
         
         UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
         [_floatingButton addGestureRecognizer:pan];
-        [_floatingButton addTarget:self action:@selector(toggleMenu) forState:UIControlEventTouchUpInside];
+        [_floatingButton addTarget:self action:@selector(toggleMenu) forControlEvents:UIControlEventTouchUpInside];
         [window addSubview:_floatingButton];
         
         _menuView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 300, 400)];
@@ -329,7 +329,7 @@ int my_availability_version_check(unsigned int version, const void *build_versio
 // 8. 構造函數：初始化 (完全對齊決勝時刻 12 個 block_invoke 邏輯)
 // ==========================================
 %ctor {
-    NSLog(@"[MapleStoryWorldsTweak] %ctor 啟動，準備注入 com.nexon.mod");
+    NSLog(@"[MapleStoryWorldsTweak] ctor 啟動，準備注入 com.nexon.mod");
     
     void *dyld_handle = dlopen("/usr/lib/system/libdyld.dylib", RTLD_NOW);
     if (dyld_handle) {
