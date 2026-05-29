@@ -34,22 +34,26 @@ jobs:
           
           DEB_ROOT=$(mktemp -d )
           mkdir -p "$DEB_ROOT/Library/MobileSubstrate/DynamicLibraries"
-          
           cp .theos/obj/MapleStoryMGlobal.dylib "$DEB_ROOT/Library/MobileSubstrate/DynamicLibraries/MapleStoryMGlobal.dylib"
           cp MapleStoryMGlobal.plist "$DEB_ROOT/Library/MobileSubstrate/DynamicLibraries/MapleStoryMGlobal.plist"
           
           CONTROL_DIR=$(mktemp -d)
           cp control "$CONTROL_DIR/control"
+          chmod 755 "$CONTROL_DIR/control"
           
           echo "2.0" > /tmp/debian-binary
           
           cd "$CONTROL_DIR"
-          tar czf /tmp/control.tar.gz --include='./control' .
+          tar czf /tmp/control.tar.gz .
           cd -
           
           cd "$DEB_ROOT"
           tar czf /tmp/data.tar.gz .
           cd -
+          
+          echo "=== Verify control.tar.gz ==="
+          tar tzf /tmp/control.tar.gz
+          ls -la /tmp/control.tar.gz
           
           cd /tmp
           ar r "$GITHUB_WORKSPACE/packages/com.manus.maplestorym_1.0.0_iphoneos-arm64e.deb" debian-binary control.tar.gz data.tar.gz
