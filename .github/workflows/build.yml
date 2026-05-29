@@ -11,29 +11,53 @@ jobs:
 
       - name: Setup Theos
         run: |
-          # 手動克隆 Theos，不使用自動安裝腳本
           git clone --recursive https://github.com/theos/theos.git ~/theos
           echo "THEOS=~/theos" >> $GITHUB_ENV
           echo "~/theos/bin" >> $GITHUB_PATH
 
       - name: Setup SDK
         run: |
-          # 直接從指定連結下載 SDK
           mkdir -p ~/theos/sdks
           curl -L https://github.com/theos/sdks/archive/master.zip -o sdks.zip
           unzip -q sdks.zip
           mv sdks-master/*.sdk ~/theos/sdks/
-          # 確保有 iPhoneOS16.5.sdk 作為預設
-          ls -l ~/theos/sdks/
 
       - name: Install ldid
         run: brew install ldid
 
       - name: Build Package
         run: |
-          # 執行編譯
           export THEOS=~/theos
-          make package FINALPACKAGE=1
+          make FINALPACKAGE=1
+          
+          mkdir -p packages
+          
+          DEB_ROOT=$(mktemp -d )
+          mkdir -p "$DEB_ROOT/Library/MobileSubstrate/DynamicLibraries"
+          
+          cp .theos/obj/MapleStoryMGlobal.dylib "$DEB_ROOT/Library/MobileSubstrate/DynamicLibraries/MapleStoryMGlobal.dylib"
+          cp MapleStoryMGlobal.plist "$DEB_ROOT/Library/MobileSubstrate/DynamicLibraries/MapleStoryMGlobal.plist"
+          
+          CONTROL_DIR=$(mktemp -d)
+          cp control "$CONTROL_DIR/control"
+          
+          echo "2.0" > /tmp/debian-binary
+          
+          cd "$CONTROL_DIR"
+          tar czf /tmp/control.tar.gz --include='./control' .
+          cd -
+          
+          cd "$DEB_ROOT"
+          tar czf /tmp/data.tar.gz .
+          cd -
+          
+          cd /tmp
+          ar r "$GITHUB_WORKSPACE/packages/com.manus.maplestorym_1.0.0_iphoneos-arm64e.deb" debian-binary control.tar.gz data.tar.gz
+          cd -
+          
+          echo "=== Built .deb ==="
+          ls -la packages/
+          file packages/*.deb
         
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
